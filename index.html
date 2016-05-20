@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+	<script src="src/core/rot.js"></script>
+	<script src="src/core/game.js"></script>
+	<script src="src/core/glyph.js"></script>
+	<script src="src/core/screen.js"></script>
+
+
+	<script src="src/races.js"></script>
+	<script src="src/archetypes.js"></script>
+	<script src="src/screens/createcharacterscreen.js"></script>
+	<script src="src/screens/playscreen.js"></script>
+
+
+	<script>
+	window.onload = function() {
+	    if (ROT.isSupported()) {
+			Game.init(80, 24);
+			document.body.appendChild(Game.getDisplay().getContainer());
+			Game.switchScreen(new Game.Screen.createCharacterScreen());
+	    }
+	};
+    </script>
+
+</body>
+</html>
