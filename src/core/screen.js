@@ -1,15 +1,16 @@
-Game.Screen = function(properties) {
-}
+Game.Screen = {
 
-Game.Screen.prototype.enter = function() {
-};
+    enter : function() {
+    },
 
-Game.Screen.prototype.exit = function() {
-};
+    exit : function() {
+    },
 
-Game.Screen.prototype.render = function(display) {
-};
+    render : function(display) {
+    },
 
-Game.Screen.prototype.handleInput = function(inputType, inputData) {
+    handleInput : function(inputType, inputData) {
+    }
+
 };
 

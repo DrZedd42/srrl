@@ -1,19 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title></title>
+<title></title>
 </head>
 <body>
 
 	<script src="src/core/rot.js"></script>
 	<script src="src/core/game.js"></script>
 	<script src="src/core/glyph.js"></script>
+	<script src="src/core/dynamicglyph.js"></script>
+	<script src="src/core/repository.js"></script>
+	<script src="src/core/entity.js"></script>
+	<script src="src/core/item.js"></script>
+	<script src="src/core/tile.js"></script>
+	<script src="src/core/map.js"></script>
+	<script src="src/core/builder.js"></script>
 	<script src="src/core/screen.js"></script>
 
 
 	<script src="src/races.js"></script>
 	<script src="src/archetypes.js"></script>
-	<script src="src/screens/createcharacterscreen.js"></script>
+	<script src="src/mixins.js"></script>
+	<script src="src/entities.js"></script>
+
+	<script src="src/levels/barrens.js"></script>
+	<script src="src/levels/office.js"></script>
+	
+	<script src="src/screens/createscreen.js"></script>
 	<script src="src/screens/playscreen.js"></script>
 
 
@@ -22,7 +35,7 @@
 	    if (ROT.isSupported()) {
 			Game.init(80, 24);
 			document.body.appendChild(Game.getDisplay().getContainer());
-			Game.switchScreen(new Game.Screen.createCharacterScreen());
+			Game.switchScreen(Game.Screen.createScreen);
 	    }
 	};
     </script>

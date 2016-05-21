@@ -1,11 +1,11 @@
 var Game = {
-    
+
     _display : null,
     _currentScreen : null,
     _screenWidth : 0,
     _screenHeight : 0,
-    
-    init : function( screenWidth, screenHeight ) {
+
+    init : function(screenWidth, screenHeight) {
 	this._screenWidth = screenWidth;
 	this._screenHeight = screenHeight;
 	this._display = new ROT.Display({
@@ -42,6 +42,10 @@ var Game = {
 	this._display.clear();
 	this._currentScreen.render(this._display);
     },
+    
+    getCurrentScreen : function() {
+	return this._currentScreen;
+    },
 
     switchScreen : function(screen) {
 	if (this._currentScreen !== null) {
@@ -53,6 +57,6 @@ var Game = {
 	    this._currentScreen.enter();
 	    this.refresh();
 	}
-    }    
-    
-}
+    }
+
+};
