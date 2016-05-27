@@ -1,8 +1,9 @@
-Game.Item = function(properties) {
-    properties = properties || {};
-    Game.DynamicGlyph.call(this, properties);
-};
+class Item extends DynamicGlyph {
+    
+    constructor(properties) {
+	properties = properties || {};
+	super(properties);
+    }
+    
+}
 
-Game.Item.extend(Game.DynamicGlyph);
-
-Game.ItemRepository = new Game.Repository('items', Game.Item);

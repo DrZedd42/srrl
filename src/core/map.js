@@ -1,223 +1,306 @@
-Game.Map = function(tiles) {
-    this._tiles = tiles;
+class Map {
+    
+    constructor(tiles) {
+	this._tiles = tiles;
+	this._depth = tiles.length;
+	this._width = tiles[0].length;
+	this._height = tiles[0][0].length;
+	
+	this._fov = [];
+	this.setupFov();
 
-    this._depth = tiles.length;
-    this._width = tiles[0].length;
-    this._height = tiles[0][0].length;
+	this._entities = {};
+	this._items = {};
+	this._effects = [];
 
-    this._fov = [];
-    this.setupFov();
+	this._scheduler = new ROT.Scheduler.Speed();
+	this._engine = new ROT.Engine(this._scheduler);
 
-    this._entities = {};
-    this._items = {};
+	this._explored = new Array(this._depth);
+	this.setupExploredArray();
+    }
+    
+    set width(width) {
+	this._width = width;
+    }
+    
+    get width() {
+	return this._width;
+    }
 
-    this._scheduler = new ROT.Scheduler.Speed();
+    set height(height) {
+	this._height = height;
+    }
 
-    this._engine = new ROT.Engine(this._scheduler);
+    get height() {
+	return this._height;
+    }
+    
+    set depth(depth) {
+	this._depth = depth;
+    }
+    
+    get depth() {
+	return this._depth;
+    }
+    
+    set engine(engine) {
+	this._engine = engine;
+    }
+    
+    get engine() {
+	return this._engine;
+    }
 
-    this._explored = new Array(this._depth);
-    this._setupExploredArray();
+    set scheduler(scheduler) {
+	this._scheduler = scheduler;
+    }
+    
+    get scheduler() {
+	return this._scheduler;
+    }
+    
+    set tiles(tiles) {
+	this._tiles = tiles;
+    }
+    
+    get tiles() {
+	return this._tiles;
+    }
+    
+    set explored(explored) {
+	this._explored = explored;
+    }
+    
+    get explored() {
+	return this._explored;
+    }
 
-    this._player = null;
-}
-
-Game.Map.prototype._setupExploredArray = function() {
-    for (var z = 0; z < this._depth; z++) {
-	this._explored[z] = new Array(this._width);
-	for (var x = 0; x < this._width; x++) {
-	    this._explored[z][x] = new Array(this._height);
-	    for (var y = 0; y < this._height; y++) {
-		this._explored[z][x][y] = false;
+    set fov(fov) {
+	this._fov = fov;
+    }
+    
+    get fov() {
+	return this._fov;
+    }
+    
+    set entities(entities) {
+	this._entities = entities;
+    }
+    
+    get entities() {
+	return this._entities;
+    }
+    
+    set items(items) {
+	this._items = items;
+    }
+    
+    get items() {
+	return this._items;
+    }
+    
+    set player(player) {
+	this._player = player;
+    }
+    
+    get player() {
+	return this._player;
+    }
+    
+    setupExploredArray() {
+	for (let z = 0; z < this.depth; z++) {
+	    this._explored[z] = new Array(this.width);
+	    for (let x = 0; x < this.width; x++) {
+		this.explored[z][x] = new Array(this.height);
+		for (var y = 0; y < this.height; y++) {
+		    this.setExplored(x, y, z, false);
+		}
 	    }
 	}
     }
-};
-
-Game.Map.prototype.setExplored = function(x, y, z, state) {
-    if (this.getTile(x, y, z) !== Game.Tile.Null) {
-	this._explored[z][x][y] = state;
+    
+    setupFov() {
+	var map = this;
+	for (let z = 0; z < this.depth; z++) {
+	    (function() {
+		let depth = z;
+		map.fov.push(new ROT.FOV.DiscreteShadowcasting(function(x, y) {
+		    return !map.getTile(x, y, depth).blocksLight;
+		},
+		{
+		    topology : 8
+		}));
+	    })();
+	}
     }
-};
 
-Game.Map.prototype.isExplored = function(x, y, z) {
-    if (this.getTile(x, y, z) !== Game.Tile.Null) {
-	return this._explored[z][x][y];
-    } else {
-	return false;
+    
+    setExplored(x, y, z, state) {
+	if (this.getTile(x, y, z) !== Tile.Null) {
+	    this.explored[z][x][y] = state;
+	}
     }
-};
 
-Game.Map.prototype.getWidth = function() {
-    return this._width;
-};
-
-Game.Map.prototype.getHeight = function() {
-    return this._height;
-};
-
-Game.Map.prototype.getDepth = function() {
-    return this._depth;
-};
-
-Game.Map.prototype.getEngine = function() {
-    return this._engine;
-};
-
-Game.Map.prototype.getFov = function(z) {
-    return this._fov[z];
-};
-
-Game.Map.prototype.setTile = function(tile, x, y, z) {
-    if (x < 0 || x >= this._width || y < 0 || y >= this._height || z < 0 || z > this._depth) {
-	return;
-    } else {
-	this._tiles[z][x][y] = tile;
+    getExplored(x, y, z) {
+	if (this.getTile(x, y, z) !== Tile.Null) {
+	    return this.explored[z][x][y];
+	} else {
+	    return false;
+	}
     }
-};
-
-Game.Map.prototype.getTile = function(x, y, z) {
-    if (x < 0 || x >= this._width || y < 0 || y >= this._height || z < 0 || z > this._depth) {
-	return Game.Tile.Null;
-    } else {
-	return this._tiles[z][x][y] || Game.Tile.Null;
+    
+    getFov(z) {
+	return this.fov[z];
     }
-};
+    
+    setTile(tile, x, y, z) {
+	if (x < 0 || x >= this.width || y < 0 || y >= this.height || z < 0 || z > this.depth) {
+	    return;
+	} else {
+	    this.tiles[z][x][y] = tile;
+	}
+    }
+    
+    getTile(x, y, z) {
+	if (x < 0 || x >= this.width || y < 0 || y >= this.height || z < 0 || z > this.depth) {
+	    return Tile.Null;
+	} else {
+	    return this.tiles[z][x][y] || Tile.Null;
+	}
+    }
+    
+    getRandomFloorPosition(z) {
+	let x = 0;
+	let y = 0;
+	
+	do {
+	    x = Math.floor(Math.random() * this.width);
+	    y = Math.floor(Math.random() * this.height);
+	} while (!this.isEmpty(x, y, z));
+	
+	return {
+	    x : x,
+	    y : y,
+	    z : z
+	};
+    }
 
-Game.Map.prototype.findTilePosition = function(tile, z) {
-    var x = 0;
-    var y = 0;
-    var z = z;
-    for (var dx = 0; dx < this._width; dx++) {
-	for (var dy = 0; dy < this._height; dy++) {
-	    if (this._tiles[z][dx][dy] === tile) {
-		x = dx;
-		y = dy;
+    isEmpty(x, y, z) {
+	return this.getTile(x, y, z).is(Tile.Floor) && this.getEntityAt(x, y, z) == null;
+    }
+    
+    findTilePosition(tile, z) {
+	let x = 0;
+	let y = 0;
+	for (let dx = 0; dx < this.width; dx++) {
+	    for (let dy = 0; dy < this.height; dy++) {
+		if (this.tiles[z][dx][dy].is(tile)) {
+		    x = dx;
+		    y = dy;
+		}
+	    }
+	}
+	return {
+	    x : x,
+	    y : y,
+	    z : z
+	};
+    }
+    
+    updateEntityPosition(entity, oldX, oldY, oldZ) {
+	if (typeof oldX === 'number') {
+	    let oldKey = oldX + ',' + oldY + ',' + oldZ;
+	    if (this.entities[oldKey] == entity) {
+		delete this.entities[oldKey];
+	    }
+	}
+	if (entity.x < 0 || entity.x >= this.width || entity.y < 0 || entity.y >= this.height
+		    || entity.z < 0 || entity.z >= this.depth) {
+	    throw new Error("Entity's position is out of bounds.");
+	}
+	let key = entity.x + ',' + entity.y + ',' + entity.z;
+	if (this.entities[key]) {
+	    throw new Error('Tried to add an entity at an occupied position.');
+	}
+	this.entities[key] = entity;
+    }
+
+    getEntityAt(x, y, z) {
+	return this.entities[x + ',' + y + ',' + z];
+    }
+    
+    addEntity(entity) {
+	entity.map = this;
+	this.updateEntityPosition(entity);
+	if (entity.hasMixin('Actor')) {
+	    this.scheduler.add(entity, true);
+	}
+	if (entity.hasMixin('PlayerActor')) {
+	    this.player = entity;
+	}
+    }
+    
+    addEntityAtRandomPosition(entity, z) {
+	var position = this.getRandomFloorPosition(z);
+	entity.x = position.x;
+	entity.y = position.y;
+	entity.z = position.z;
+	this.addEntity(entity);
+    }
+    
+    
+    removeEntity(entity) {
+	let key = entity.x + ',' + entity.y + ',' + entity.z;
+	if (this.entities[key] == entity) {
+	    delete this.entities[key];
+	}
+	if (entity.hasMixin('Actor')) {
+	    this.scheduler.remove(entity);
+	}
+	if (entity.hasMixin('PlayerActor')) {
+	    this.player = undefined;
+	}
+    }
+
+    getItemsAt(x, y, z) {
+	return this.items[x + ',' + y + ',' + z];
+    }
+    
+    setItemsAt(x, y, z, items) {
+	let key = x + ',' + y + ',' + z;
+	if (items.length === 0) {
+	   if (this.items[key]) {
+	       delete this.items[key];
+	   }
+	} else {
+	   this.items[key] = items;
+	}
+    }
+
+    addItem(x, y, z, item) {
+	let key = x + ',' + y + ',' + z;
+	if (this.items[key]) {
+	   this.items[key].push(item);
+	} else {
+	   this.items[key] = [ item ];
+	}
+    }
+   
+    removeItem(x, y, z, item) {
+	let key = x + ',' + y + ',' + z;
+	if (this.items[key]) {
+	    this.items[key].pop(item);
+	    if (this.items[key].length === 0) {
+		delete this.items[key];
 	    }
 	}
     }
-    return {
-	x : x,
-	y : y,
-	z : z
-    };
+    
+    addItemAtRandomPosition(item, z) {
+	let position = this.getRandomFloorPosition(z);
+	this.addItem(position.x, position.y, position.z, item);
+    }
+    
 }
 
-Game.Map.prototype.getRandomFloorPosition = function(z) {
-    var x = 0;
-    var y = 0;
-    var z = z;
-    do {
-	x = Math.floor(Math.random() * this._width);
-	y = Math.floor(Math.random() * this._height);
-    } while (!this.isEmpty(x, y, z));
-    return {
-	x : x,
-	y : y,
-	z : z
-    };
-};
-
-Game.Map.prototype.isEmpty = function(x, y, z) {
-    return this.getTile(x, y, z) == Game.Tile.Floor && this.getEntityAt(x, y, z) == null;
-};
-
-Game.Map.prototype.getEntityAt = function(x, y, z) {
-    return this._entities[x + ',' + y + ',' + z];
-};
-
-Game.Map.prototype.addEntityAtRandomPosition = function(entity, z) {
-    var position = this.getRandomFloorPosition(z);
-    entity.setX(position.x);
-    entity.setY(position.y);
-    entity.setZ(position.z);
-    this.addEntity(entity);
-};
-
-Game.Map.prototype.addEntity = function(entity) {
-    entity.setMap(this);
-    this.updateEntityPosition(entity);
-    if (entity.hasMixin('Actor')) {
-	this._scheduler.add(entity, true);
-    }
-    if (entity.hasMixin(Game.EntityMixins.PlayerActor)) {
-	this._player = entity;
-    }
-};
-
-Game.Map.prototype.updateEntityPosition = function(entity, oldX, oldY, oldZ) {
-    if (typeof oldX === 'number') {
-	var oldKey = oldX + ',' + oldY + ',' + oldZ;
-	if (this._entities[oldKey] == entity) {
-	    delete this._entities[oldKey];
-	}
-    }
-    if (entity.getX() < 0 || entity.getX() >= this._width || entity.getY() < 0 || entity.getY() >= this._height
-	    || entity.getZ() < 0 || entity.getZ() >= this._depth) {
-	throw new Error("Entity's position is out of bounds.");
-    }
-    var key = entity.getX() + ',' + entity.getY() + ',' + entity.getZ();
-    if (this._entities[key]) {
-	throw new Error('Tried to add an entity at an occupied position.');
-    }
-    this._entities[key] = entity;
-};
-
-Game.Map.prototype.removeEntity = function(entity) {
-    var key = entity.getX() + ',' + entity.getY() + ',' + entity.getZ();
-    if (this._entities[key] == entity) {
-	delete this._entities[key];
-    }
-    if (entity.hasMixin('Actor')) {
-	this._scheduler.remove(entity);
-    }
-    if (entity.hasMixin(Game.EntityMixins.PlayerActor)) {
-	this._player = undefined;
-    }
-};
-
-Game.Map.prototype.getItemsAt = function(x, y, z) {
-    return this._items[x + ',' + y + ',' + z];
-};
-
-Game.Map.prototype.setItemsAt = function(x, y, z, items) {
-    var key = x + ',' + y + ',' + z;
-    if (items.length === 0) {
-	if (this._items[key]) {
-	    delete this._items[key];
-	}
-    } else {
-	this._items[key] = items;
-    }
-};
-
-Game.Map.prototype.addItem = function(x, y, z, item) {
-    var key = x + ',' + y + ',' + z;
-    if (this._items[key]) {
-	this._items[key].push(item);
-    } else {
-	this._items[key] = [ item ];
-    }
-};
-
-Game.Map.prototype.addItemAtRandomPosition = function(item, z) {
-    var position = this.getRandomFloorPosition(z);
-    this.addItem(position.x, position.y, position.z, item);
-};
-
-Game.Map.prototype.setupFov = function() {
-    var map = this;
-    for (var z = 0; z < this._depth; z++) {
-	(function() {
-	    var depth = z;
-	    map._fov.push(new ROT.FOV.DiscreteShadowcasting(function(x, y) {
-		return !map.getTile(x, y, depth).isBlockingLight();
-	    }, {
-		topology : 8
-	    }));
-	})();
-    }
-};
-
-Game.Map.prototype.getPlayer = function() {
-    return this._player;
-};

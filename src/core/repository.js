@@ -1,31 +1,42 @@
-Game.Repository = function(name, ctor) {
-    this._name = name;
-    this._templates = {};
-    this._ctor = ctor;
-    this._randomTemplates = {};
-};
-
-Game.Repository.prototype.define = function(name, template, options) {
-    this._templates[name] = template;
-    var disableRandomCreation = options && options['disableRandomCreation'];
-    if (!disableRandomCreation) {
-	this._randomTemplates[name] = template;
+class Repository {
+    
+    constructor(name) {
+	this._name = name;
+	this._classes = {};
+	this._randomClasses = {};
     }
-};
-
-Game.Repository.prototype.create = function(name, extraProperties) {
-    if (!this._templates[name]) {
-	throw new Error("No template named '" + name + "' in repository '" + this._name + "'");
+    
+    get name() {
+	return this._name;
     }
-    var template = Object.create(this._templates[name]);
-    if (extraProperties) {
-	for ( var key in extraProperties) {
-	    template[key] = extraProperties[key];
+    
+    get classes() {
+	return this._classes;
+    }
+    
+    get randomClasses() {
+	return this._randomClasses;
+    }
+    
+    define(name, clazz, options) {
+	this.classes[name] = clazz;
+	let disableRandomCreation = options && options['disableRandomCreation'];
+	if (!disableRandomCreation) {
+	    this.randomClasses[name] = clazz;
 	}
     }
-    return new this._ctor(template);
-};
+    
+    create(name, properties) {
+	if (!this.classes[name]) {
+	    throw new Error("No class named '" + name + "' in repository '" + this.name + "'");
+	}
+	return new this.classes[name];
+    }
+    
+    createRandom () {
+	return this.create(Object.keys(this.randomClasses).random());
+    }
 
-Game.Repository.prototype.createRandom = function() {
-    return this.create(Object.keys(this._randomTemplates).random());
-};
+}
+
+
